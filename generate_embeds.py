@@ -45,7 +45,7 @@ def encode_queries(df: pd.DataFrame, image_root) -> np.ndarray:
     dataset = QueryDataset(df, image_root=image_root, preprocess=preprocess)
     dataloader = DataLoader(
         dataset,
-        batch_size=8,
+        batch_size=4,
         shuffle=False,
         num_workers=4,
         pin_memory=True,
@@ -84,7 +84,7 @@ def encode_database(df: pd.DataFrame, image_root) -> np.ndarray:
     dataset = DatabaseDataset(df, image_root=image_root, preprocess=preprocess)
     dataloader = DataLoader(
         dataset,
-        batch_size=8,
+        batch_size=4,
         shuffle=False,
         num_workers=4,
         pin_memory=True,

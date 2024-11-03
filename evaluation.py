@@ -45,18 +45,23 @@ def calculate_top1_accuracy(predictions, ground_truth_images, database_df):
 
 if __name__ == '__main__':
     # Paths to the CSV files
-    test_csv = 'sample evaluation/data.csv'         # Replace with your test CSV file
-    database_csv = 'dataset/data.csv'               # Replace with your database CSV file
+    test_csv = 'sample evaluation/data.csv'         # Test data
+    database_csv = 'dataset/data.csv'               # Original database data
 
     # Step 1: Load data
     test_df = load_data(test_csv)
     database_df = load_data(database_csv)
-    database_image_path = './dataset/images'
-    testset_image_path = './sample evaluation/images'
+
+    # Combine database and test target images
+    combined_database_df = pd.concat([database_df, test_df[['target_image']]], ignore_index=True).drop_duplicates()
+
+    # Update image paths
+    database_image_path = './testset/images'              # Path to database images
+    testset_image_path = './testset/images'     # Path to test images
 
     # Extract necessary columns for embeddings
     query_df = test_df[['query_image', 'query_text']]
-    database_images_df = database_df[['target_image']]
+    database_images_df = combined_database_df[['target_image']]
 
     # Step 2: Generate embeddings
     print("Generating database embeddings...")
@@ -76,7 +81,7 @@ if __name__ == '__main__':
     # Step 5: Calculate accuracy and collect predicted image filenames
     print("Calculating Top-1 accuracy...")
     ground_truth_images = test_df['target_image'].tolist()
-    accuracy, predicted_images = calculate_top1_accuracy(predictions, ground_truth_images, database_df)
+    accuracy, predicted_images = calculate_top1_accuracy(predictions, ground_truth_images, combined_database_df)
 
     print(f"Top-1 Retrieval Accuracy: {accuracy:.2f}%")
 

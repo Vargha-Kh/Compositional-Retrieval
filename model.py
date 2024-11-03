@@ -54,3 +54,4 @@ class CLIPModel(nn.Module):
             image_features = F.dropout(image_features, p=self.dropout_prob, training=True)
             text_features = F.dropout(text_features, p=self.dropout_prob, training=True)
         return image_features, text_features
+
