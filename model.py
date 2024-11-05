@@ -6,7 +6,7 @@ from preprocessing import get_train_preprocess, get_eval_preprocess
 import torch.nn.functional as F
 
 class CLIPModel(nn.Module):
-    def __init__(self, model_name='ViT-B-32', pretrained='openai', image_size=512, dropout_prob=0.5):
+    def __init__(self, model_name='ViT-B-16', pretrained='openai', image_size=512, dropout_prob=0.5):
         super(CLIPModel, self).__init__()
         self.model, _, _ = open_clip.create_model_and_transforms(
             model_name, pretrained=pretrained
@@ -14,8 +14,8 @@ class CLIPModel(nn.Module):
         self.image_size = image_size
         self.dropout_prob = dropout_prob
         # Use custom preprocessing functions
-        self.train_preprocess = get_train_preprocess()
-        self.eval_preprocess = get_eval_preprocess()
+        self.train_preprocess = get_train_preprocess(self.image_size)
+        self.eval_preprocess = get_eval_preprocess(self.image_size)
         # Adjust positional embeddings
         self._resize_positional_embeddings()
 
@@ -54,4 +54,3 @@ class CLIPModel(nn.Module):
             image_features = F.dropout(image_features, p=self.dropout_prob, training=True)
             text_features = F.dropout(text_features, p=self.dropout_prob, training=True)
         return image_features, text_features
-

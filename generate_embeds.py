@@ -40,12 +40,12 @@ def encode_queries(df: pd.DataFrame, image_root) -> np.ndarray:
     model.eval()
 
     preprocess = model.eval_preprocess
-    tokenizer = open_clip.get_tokenizer('ViT-B-32')
+    tokenizer = open_clip.get_tokenizer('ViT-B-16')
 
     dataset = QueryDataset(df, image_root=image_root, preprocess=preprocess)
     dataloader = DataLoader(
         dataset,
-        batch_size=4,
+        batch_size=1,
         shuffle=False,
         num_workers=4,
         pin_memory=True,
@@ -61,12 +61,14 @@ def encode_queries(df: pd.DataFrame, image_root) -> np.ndarray:
 
             query_images = batch['query_image'].to(device)
             query_texts = batch['query_text']
-            query_texts = tokenizer(query_texts).to(device)
 
-            query_image_features = model.model.encode_image(query_images)
-            query_text_features = model.model.encode_text(query_texts)
-            query_features = (query_image_features + query_text_features) / 2
-            query_features = query_features / query_features.norm(dim=-1, keepdim=True)
+            with torch.cuda.amp.autocast():
+                query_texts = tokenizer(query_texts).to(device)
+
+                query_image_features = model.model.encode_image(query_images)
+                query_text_features = model.model.encode_text(query_texts)
+                query_features = (query_image_features + query_text_features) / 2
+                query_features = query_features / query_features.norm(dim=-1, keepdim=True)
 
             all_embeddings.append(query_features.cpu().numpy())
 
@@ -84,7 +86,7 @@ def encode_database(df: pd.DataFrame, image_root) -> np.ndarray:
     dataset = DatabaseDataset(df, image_root=image_root, preprocess=preprocess)
     dataloader = DataLoader(
         dataset,
-        batch_size=4,
+        batch_size=1,
         shuffle=False,
         num_workers=4,
         pin_memory=True,
@@ -97,10 +99,10 @@ def encode_database(df: pd.DataFrame, image_root) -> np.ndarray:
         for images in tqdm(dataloader, desc="Encoding Database Images"):
             if images is None:
                 continue
-
             images = images.to(device)
-            image_features = model.model.encode_image(images)
-            image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+            with torch.cuda.amp.autocast():
+                image_features = model.model.encode_image(images)
+                image_features = image_features / image_features.norm(dim=-1, keepdim=True)
             all_embeddings.append(image_features.cpu().numpy())
 
     all_embeddings = np.vstack(all_embeddings)

@@ -56,7 +56,7 @@ if __name__ == '__main__':
     combined_database_df = pd.concat([database_df, test_df[['target_image']]], ignore_index=True).drop_duplicates()
 
     # Update image paths
-    database_image_path = './testset/images'              # Path to database images
+    database_image_path = './testset/images'    # Path to database images
     testset_image_path = './testset/images'     # Path to test images
 
     # Extract necessary columns for embeddings

@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 import torch.optim as optim
-from model import CLIPModel  # Assuming you're using the model with dropout
+from model import CLIPModel
 import open_clip
 from tqdm import tqdm
 import csv
@@ -11,13 +11,13 @@ import os
 
 def train_model(model, train_dataloader, val_dataloader, num_epochs, device, csv_log_path='training_log.csv'):
     model = model.to(device)
-    tokenizer = open_clip.get_tokenizer('ViT-B-32')
+    tokenizer = open_clip.get_tokenizer('ViT-B-16')
 
-    optimizer = optim.AdamW(model.parameters(), lr=5e-6, weight_decay=1e-3)
+    optimizer = optim.AdamW(model.parameters(), lr=5e-5, weight_decay=1e-3)
     criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
 
     # Learning rate scheduler
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5, verbose=True)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3, verbose=True)
 
     # For mixed-precision training
     scaler = torch.cuda.amp.GradScaler()

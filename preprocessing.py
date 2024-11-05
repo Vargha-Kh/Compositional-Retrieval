@@ -1,10 +1,11 @@
 # preprocessing.py
 from torchvision import transforms
 
-def get_train_preprocess():
+def get_train_preprocess(image_size):
     preprocess = transforms.Compose([
-        transforms.Resize(512, interpolation=transforms.InterpolationMode.BICUBIC),
-        transforms.RandomResizedCrop(512),
+        transforms.Resize(image_size, interpolation=transforms.InterpolationMode.BICUBIC),
+        transforms.RandomResizedCrop(image_size),
+        # transforms.RandomRotation(10),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(
@@ -14,9 +15,9 @@ def get_train_preprocess():
     ])
     return preprocess
 
-def get_eval_preprocess():
+def get_eval_preprocess(image_size):
     preprocess = transforms.Compose([
-        transforms.Resize(512, interpolation=transforms.InterpolationMode.BICUBIC),
+        transforms.Resize(image_size, interpolation=transforms.InterpolationMode.BICUBIC),
         transforms.ToTensor(),
         transforms.Normalize(
             mean=[0.48145466, 0.4578275, 0.40821073],
