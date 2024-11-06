@@ -9,11 +9,12 @@ from tqdm import tqdm
 import csv
 import os
 
+
 def train_model(model, train_dataloader, val_dataloader, num_epochs, device, csv_log_path='training_log.csv'):
     model = model.to(device)
-    tokenizer = open_clip.get_tokenizer('ViT-B-16')
+    tokenizer = open_clip.get_tokenizer('ViT-B-16')  # Adjust tokenizer based on your backbone if needed
 
-    optimizer = optim.AdamW(model.parameters(), lr=5e-5, weight_decay=1e-3)
+    optimizer = optim.AdamW(model.parameters(), lr=5e-6, weight_decay=1e-3)
     criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
 
     # Learning rate scheduler
@@ -39,7 +40,10 @@ def train_model(model, train_dataloader, val_dataloader, num_epochs, device, csv
         train_correct = 0
         train_total = 0
 
-        for batch in tqdm(train_dataloader, desc=f"Epoch {epoch+1}/{num_epochs} - Training"):
+        # Initialize tqdm progress bar for training
+        train_progress = tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} - Training", leave=False)
+
+        for batch in train_progress:
             optimizer.zero_grad()
 
             query_images = batch['query_image'].to(device)
@@ -75,12 +79,23 @@ def train_model(model, train_dataloader, val_dataloader, num_epochs, device, csv
             scaler.step(optimizer)
             scaler.update()
 
+            # Update training loss and accuracy
             train_loss += loss.item()
 
             # Compute accuracy (query to target)
             _, preds = torch.max(logits_per_query, dim=1)
             train_correct += torch.sum(preds == labels).item()
             train_total += labels.size(0)
+
+            # Calculate running averages
+            avg_loss = train_loss / (train_total / labels.size(0))
+            avg_accuracy = train_correct / train_total
+
+            # Update tqdm progress bar with running metrics
+            train_progress.set_postfix({
+                'Loss': f"{avg_loss:.4f}",
+                'Acc': f"{avg_accuracy * 100:.2f}%"
+            })
 
         avg_train_loss = train_loss / len(train_dataloader)
         train_accuracy = train_correct / train_total
@@ -91,8 +106,11 @@ def train_model(model, train_dataloader, val_dataloader, num_epochs, device, csv
         val_correct = 0
         val_total = 0
 
+        # Initialize tqdm progress bar for validation
+        val_progress = tqdm(val_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} - Validation", leave=False)
+
         with torch.no_grad():
-            for batch in tqdm(val_dataloader, desc=f"Epoch {epoch+1}/{num_epochs} - Validation"):
+            for batch in val_progress:
                 query_images = batch['query_image'].to(device)
                 target_images = batch['target_image'].to(device)
                 query_texts = batch['query_text']
@@ -126,15 +144,26 @@ def train_model(model, train_dataloader, val_dataloader, num_epochs, device, csv
                 val_correct += torch.sum(preds == labels).item()
                 val_total += labels.size(0)
 
+                # Calculate running averages
+                avg_val_loss = val_loss / (val_total / labels.size(0))
+                avg_val_accuracy = val_correct / val_total
+
+                # Update tqdm progress bar with running metrics
+                val_progress.set_postfix({
+                    'Loss': f"{avg_val_loss:.4f}",
+                    'Acc': f"{avg_val_accuracy * 100:.2f}%"
+                })
+
         avg_val_loss = val_loss / len(val_dataloader)
         val_accuracy = val_correct / val_total
 
         # Adjust learning rate based on validation loss
         scheduler.step(avg_val_loss)
 
-        print(f"Epoch [{epoch+1}/{num_epochs}]")
-        print(f"Train Loss: {avg_train_loss:.4f}, Train Accuracy: {train_accuracy*100:.2f}%")
-        print(f"Val Loss: {avg_val_loss:.4f}, Val Accuracy: {val_accuracy*100:.2f}%")
+        # Print epoch summary
+        print(f"Epoch [{epoch + 1}/{num_epochs}]")
+        print(f"Train Loss: {avg_train_loss:.4f}, Train Accuracy: {train_accuracy * 100:.2f}%")
+        print(f"Val Loss: {avg_val_loss:.4f}, Val Accuracy: {val_accuracy * 100:.2f}%")
 
         # Log metrics to CSV
         with open(csv_log_path, 'a', newline='') as csvfile:
