@@ -29,7 +29,7 @@ def main():
     val_dataset = CompositionalDataset(val_df, image_root=image_root, preprocess=preprocess, mode='eval')
 
     # Create dataloaders
-    train_dataloader = DataLoader(train_dataset, batch_size=3, shuffle=True, num_workers=4, pin_memory=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True, num_workers=4, pin_memory=True)
     val_dataloader = DataLoader(val_dataset, batch_size=3, shuffle=False, num_workers=4, pin_memory=True)
 
     # Train the model

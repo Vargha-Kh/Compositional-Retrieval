@@ -6,7 +6,7 @@ from preprocessing import get_train_preprocess, get_eval_preprocess
 import torch.nn.functional as F
 
 class CLIPModel(nn.Module):
-    def __init__(self, model_name='ViT-B-16', pretrained='openai', image_size=512, dropout_prob=0.5):
+    def __init__(self, model_name='ViT-B-32', pretrained='openai', image_size=512, dropout_prob=0.65):
         super(CLIPModel, self).__init__()
         self.model, _, _ = open_clip.create_model_and_transforms(
             model_name, pretrained=pretrained

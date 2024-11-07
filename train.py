@@ -12,9 +12,9 @@ import os
 
 def train_model(model, train_dataloader, val_dataloader, num_epochs, device, csv_log_path='training_log.csv'):
     model = model.to(device)
-    tokenizer = open_clip.get_tokenizer('ViT-B-16')  # Adjust tokenizer based on your backbone if needed
+    tokenizer = open_clip.get_tokenizer('ViT-B-32')  # Adjust tokenizer based on your backbone if needed
 
-    optimizer = optim.AdamW(model.parameters(), lr=5e-6, weight_decay=1e-3)
+    optimizer = optim.AdamW(model.parameters(), lr=5e-6, weight_decay=1e-4)
     criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
 
     # Learning rate scheduler
